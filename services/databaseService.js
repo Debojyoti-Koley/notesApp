@@ -1,0 +1,14 @@
+import {database} from './appwrite'
+const databaseService = {
+    async listDocuments (dbId, colId){
+        try{
+            const response = await database.listDocuments(dbId,colId);
+            return response.documents || [];
+        }
+        catch(err){
+            console.error('Error in fetching documents:', error.message);
+            return {error: error.message};
+        }
+    }
+}
+export default databaseService;
