@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import {View, Text, StyleSheet, TouchableOpacity, Modal, TextInput} from 'react-native'
 import NoteList from '@/components/NoteList'
 import AddNoteModal from '@/components/AddNoteModal'
-import noteServices from '@/services/noteService'
+import noteService from '@/services/noteService'
+
 const NoteScreen = () =>{
     const [notes,setNotes] = useState([])
     const [modalVisible, setModalVisible] = useState(false)
@@ -11,14 +12,15 @@ const NoteScreen = () =>{
     const [error,setError] = useState(null)
 
     useEffect(()=>{
+        console.log("useEffect")
         fetchNotes();
     },[]);
 
 
     const fetchNotes = async () => {
         setLoading(true);
-        const response = await noteServices.getNotes();
-
+        const response = await noteService.getNotes();
+        console.log(response)
         if(response.error){
             setError(response.error);
             Alert.alert('Error', response.error);
@@ -27,13 +29,16 @@ const NoteScreen = () =>{
             setError(null);
         }
         setLoading(false);
+        const res = await noteService.getNotes()
+        console.log("fetchnotes called")
+        console.log(res)
     }
     
 
     const addNote = () =>{
         if(newNote.trim()==='') return;
 
-        setNotes((prevNotes)=>[...prevNotes,{id: Date.now.toString(), text: newNote }])
+        setNotes((prevNotes)=>[...prevNotes,{id: Date.now().toString(), text: newNote }])
         setModalVisible(false)
     }
 
