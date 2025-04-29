@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import {View, Text, StyleSheet, TouchableOpacity, Modal, TextInput} from 'react-native'
+import {View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert} from 'react-native'
 import NoteList from '@/components/NoteList'
 import AddNoteModal from '@/components/AddNoteModal'
 import noteService from '@/services/noteService'
@@ -35,16 +35,64 @@ const NoteScreen = () =>{
     }
     
 
-    const addNote = () =>{
+    const addNote = async () =>{
         if(newNote.trim()==='') return;
 
-        setNotes((prevNotes)=>[...prevNotes,{id: Date.now().toString(), text: newNote }])
+       const response = await noteService.addNote(newNote);
+       if(response.error){
+        Alert.alert('Error', response.error)
+       }
+       else{
+        setNotes([...notes, response.data]);
+       }
+       setNewNote('')
         setModalVisible(false)
     }
+    const deleteNote = async (id)=>{
+        Alert.alert('Delete Note', 'Do you want to delete this note?', [
+            {
+                text: 'Cancel',
+                style: 'cancel'
+            },
+            {
+                text:'Delete',
+                style:'destructive',
+                onPress: async ()=>{
+                    const response = await noteService.deleteNote(id);
+                    console.log('onpress',response)
+                    if(response.error){
+                        Alert.alert('Error',response.error);
+                    }
+                    else{
+                        setNotes(notes.filter((note)=>note.$id !== id));
+                    }
+                }
+            }
+        ])
+    };
 
+    const editNote = async (id, newText)=>{
+        if(!newText.trim()){
+            Alert.alert('Error', 'Text can not be empty');
+            return;
+        }
+        const response = await noteService.updateNote(id, newText);
+        if(response.error){
+            Alert.alert('Error', response.error);
+        }else{
+            setNotes((prevNotes)=>prevNotes.map((note)=>note.$id ===id ? {...note, text: response.data.text}:note));
+        }
+    }
     return(
         <View style={styles.container}>
-            <NoteList notes={notes}/>
+            {loading? (
+                <ActivityIndicator size='large' color='#007ers'/>
+            ): (
+                <>
+                {error && <Text style={styles.errorText}>{error}</Text>}
+                <NoteList notes={notes} onDelete={deleteNote} onEdit={editNote}/>
+                </>
+            )}
             <TouchableOpacity style={styles.addButton} onPress={()=>setModalVisible(true)}>
                 <Text style={styles.addButtonText}>+ Add Note</Text>
             </TouchableOpacity>
@@ -79,6 +127,12 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
+      },
+      errorText: {
+        color: 'red',
+        textAlign: 'center',
+        marginBottom: 10,
+        fontSize: 16,
       },
 })
 export default NoteScreen;
