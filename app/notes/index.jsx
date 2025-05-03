@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
-import {View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert} from 'react-native'
+import {View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert} from 'react-native'
 import NoteList from '@/components/NoteList'
 import AddNoteModal from '@/components/AddNoteModal'
 import noteService from '@/services/noteService'
+import { useRouter } from 'expo-router';
+import {useAuth} from '@/contexts/AuthContext';
 
 const NoteScreen = () =>{
+    const router = useRouter();
+    const {user, loading:authLoading} = useAuth();
     const [notes,setNotes] = useState([])
     const [modalVisible, setModalVisible] = useState(false)
     const [newNote, setNewNote] = useState('')
@@ -12,15 +16,21 @@ const NoteScreen = () =>{
     const [error,setError] = useState(null)
 
     useEffect(()=>{
-        console.log("useEffect")
-        fetchNotes();
-    },[]);
+        if(!authLoading && !user){
+            router.replace('/auth');
+        }
+    },[user, authLoading])
+
+    useEffect(()=>{
+        if(user){
+            fetchNotes();
+        }   
+    },[user]);
 
 
     const fetchNotes = async () => {
         setLoading(true);
-        const response = await noteService.getNotes();
-        console.log(response)
+        const response = await noteService.getNotes(user.$id);
         if(response.error){
             setError(response.error);
             Alert.alert('Error', response.error);
@@ -29,16 +39,13 @@ const NoteScreen = () =>{
             setError(null);
         }
         setLoading(false);
-        const res = await noteService.getNotes()
-        console.log("fetchnotes called")
-        console.log(res)
     }
     
 
     const addNote = async () =>{
         if(newNote.trim()==='') return;
 
-       const response = await noteService.addNote(newNote);
+       const response = await noteService.addNote(user.$id,newNote);
        if(response.error){
         Alert.alert('Error', response.error)
        }
@@ -59,7 +66,6 @@ const NoteScreen = () =>{
                 style:'destructive',
                 onPress: async ()=>{
                     const response = await noteService.deleteNote(id);
-                    console.log('onpress',response)
                     if(response.error){
                         Alert.alert('Error',response.error);
                     }
@@ -90,7 +96,10 @@ const NoteScreen = () =>{
             ): (
                 <>
                 {error && <Text style={styles.errorText}>{error}</Text>}
-                <NoteList notes={notes} onDelete={deleteNote} onEdit={editNote}/>
+                {notes.length === 0 ? 
+                (<Text style={styles.noNotesText}>Empty note list </Text>) : 
+                (<NoteList notes={notes} onDelete={deleteNote} onEdit={editNote}/>)}
+                
                 </>
             )}
             <TouchableOpacity style={styles.addButton} onPress={()=>setModalVisible(true)}>
@@ -133,6 +142,13 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 10,
         fontSize: 16,
+      },
+      noNotesText: {
+        textAlign: 'center',
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#555',
+        marginTop: 15,
       },
 })
 export default NoteScreen;
