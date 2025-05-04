@@ -7,7 +7,8 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
+    "jsEngine": "jsc",
     "ios": {
       "supportsTablet": true
     },
@@ -15,13 +16,16 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.notesapp.notesapp",
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+    "assetBundlePatterns": ["**/*"],
     "plugins": [
       "expo-router",
       [
@@ -36,6 +40,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "cf728d2a-e64d-4c3b-8d78-ada6ff4467b2"
+      }
+    },
+    "owner": "debojyotikoley"
   }
 }
